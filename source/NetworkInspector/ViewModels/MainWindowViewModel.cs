@@ -11,7 +11,7 @@ using Avalonia.Threading;
 using AddressRange = NetworkInspector.Models.AddressRange;
 
 namespace NetworkInspector.ViewModels;
- 
+
 public partial class MainWindowViewModel : ViewModelBase
 {
     private AddressRange addressRange;
@@ -29,7 +29,22 @@ public partial class MainWindowViewModel : ViewModelBase
 
     }
 
-    #region Properties
+    #region Properties 
+    public string[] CIDRMasks
+    {
+        get
+        {
+            List<string> results = new();
+
+            for (int i = 0; i <= 32; i++)
+                results.Add('/' + Convert.ToString(i));
+
+            return results.ToArray();
+
+        }
+
+    }
+
     public string FirstHost
     {
         get => addressRange.FirstAddress.ToString();
@@ -53,6 +68,41 @@ public partial class MainWindowViewModel : ViewModelBase
                 addressRange.LastAddress = address;
 
             OnPropertyChanged();
+
+        }
+
+    }
+
+    public string Subnet
+    {
+        set
+        {
+            const int bitsPerByte = 8;
+            const char sep = '/';
+
+            string cidrString = value.Substring(value.IndexOf(sep) + 1);
+            int cidrLength = Convert.ToInt32(cidrString);
+
+            int addressLengthInBits = addressRange.FirstAddress.GetAddressBytes().Length * bitsPerByte;
+
+            byte[] firstAddressBytes = addressRange.FirstAddress.GetAddressBytes(),
+                   lastAddressBytes;
+
+            Array.Reverse(firstAddressBytes);
+
+            uint subnetMaskInt = uint.MaxValue << (addressLengthInBits - cidrLength),
+                 firstAddressInt = BitConverter.ToUInt32(firstAddressBytes, 0),
+                 networkAddressInt = firstAddressInt & subnetMaskInt,
+                 broadcastAddressInt = firstAddressInt | ~subnetMaskInt;
+
+            firstAddressBytes = BitConverter.GetBytes(networkAddressInt + 1);
+            lastAddressBytes = BitConverter.GetBytes(broadcastAddressInt - 1);
+
+            Array.Reverse(firstAddressBytes);
+            Array.Reverse(lastAddressBytes);
+
+            FirstHost = new IPAddress(firstAddressBytes).ToString();
+            LastHost = new IPAddress(lastAddressBytes).ToString();
 
         }
 
@@ -99,27 +149,23 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            byte[] firsAddressBytes = addressRange.FirstAddress.GetAddressBytes();
-            byte[] lastAddressBytes = addressRange.LastAddress.GetAddressBytes();
+            byte[] firsAddressBytes = addressRange.FirstAddress.GetAddressBytes(),
+                   lastAddressBytes = addressRange.LastAddress.GetAddressBytes();
 
             // GetAddressBytes return bytes in Network Byte Order, which is Big-Endian. The below reverses the arrays to account for this:
             Array.Reverse(firsAddressBytes);
             Array.Reverse(lastAddressBytes);
 
-            uint firstAddress;
-            uint lastAddress;
+            uint firstAddressInt,
+                 lastAddressInt;
 
-            if (addressRange.FirstAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-            {
-                firstAddress = BitConverter.ToUInt32(firsAddressBytes, 0);
-                lastAddress = BitConverter.ToUInt32(lastAddressBytes, 0);
-
-            }
-            else
+            if (addressRange.FirstAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
                 return;
-                
 
-            for (uint i = firstAddress; i <= lastAddress && !cancellationToken.IsCancellationRequested; i++)
+            firstAddressInt = BitConverter.ToUInt32(firsAddressBytes, 0);
+            lastAddressInt = BitConverter.ToUInt32(lastAddressBytes, 0);
+
+            for (uint i = firstAddressInt; i <= lastAddressInt && !cancellationToken.IsCancellationRequested; i++)
             {
                 byte[] currentIPBytes = BitConverter.GetBytes(i);
 

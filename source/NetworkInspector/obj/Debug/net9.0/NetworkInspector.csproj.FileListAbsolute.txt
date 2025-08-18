@@ -73,3 +73,4 @@
 /Volumes/Extended Storage/Users/josh/repos/network-inspector/source/NetworkInspector/obj/Debug/net9.0/NetworkInspector.pdb
 /Volumes/Extended Storage/Users/josh/repos/network-inspector/source/NetworkInspector/obj/Debug/net9.0/NetworkInspector.genruntimeconfig.cache
 /Volumes/Extended Storage/Users/josh/repos/network-inspector/source/NetworkInspector/obj/Debug/net9.0/ref/NetworkInspector.dll
+/Volumes/Extended Storage/Users/josh/repos/network-inspector/source/NetworkInspector/obj/Debug/net9.0/NetworkInspector.sourcelink.json
