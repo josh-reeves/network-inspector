@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 
 namespace NetworkInspector.Models;
@@ -25,6 +26,8 @@ public class AddressRange
 
             ]);
 
+        Ports = new();
+
     }
 
     #endregion
@@ -33,6 +36,11 @@ public class AddressRange
     public IPAddress FirstAddress { get; set; }
     public IPAddress LastAddress { get; set; }
 
+    public IPAddress? SubnetMask { get; set; }
+    public IPAddress? NetworkAddress { get; set; }
+    public IPAddress? BroadcastAddress { get; set; }
+
+    public List<int> Ports { get; set; }
     #endregion
 
 }

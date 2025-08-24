@@ -1,108 +1,116 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:NetworkInspector.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="using:NetworkInspector.ViewModels"
+        xmlns:converters="using:NetworkInspector.Converters"
         mc:Ignorable="d" d:DesignWidth="640" d:DesignHeight="480"
         x:Class="NetworkInspector.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
+        x:DataType="viewModels:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="NetworkInspector"
         Width="640"
         Height="480">
 
+    <!-- This only sets the DataContext for the previewer in an IDE, to set the actual DataContext for runtime, set the DataContext property in code 
+         (look at App.axaml.cs) -->
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
+        <viewModels:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Window.Styles>
-    </Window.Styles>
+    <Window.Resources>
+        <converters:IPAddressConverter x:Key="IPAddressConverter" />
+    </Window.Resources>
 
-        <DockPanel>
+    <DockPanel >
 
-            <WrapPanel Margin="10"
-                       HorizontalAlignment="Center"
-                       DockPanel.Dock="Top">
+        <WrapPanel Margin="10"
+                   HorizontalAlignment="Center"
+                   DockPanel.Dock="Top">
 
-                    <StackPanel Orientation="Vertical"
-                                Margin="10"
+                <StackPanel Orientation="Vertical"
+                            Margin="10"
+                            Spacing="10">
+
+                    <TextBlock Text="Start IP Address:" 
+                               HorizontalAlignment="Left"/>
+
+                    <TextBox Width="200" 
+                             HorizontalAlignment="Left"
+                             Text="{Binding FirstAddress, Converter={StaticResource IPAddressConverter}}"/>
+
+                </StackPanel>
+
+                <StackPanel Orientation="Vertical"
+                            Margin="10"
+                            Spacing="10">
+
+                    <TextBlock Text="End IP Address:" 
+                               HorizontalAlignment="Left"/>
+
+                    <StackPanel Orientation="Horizontal"
                                 Spacing="10">
 
-                        <TextBlock Text="Start IP Address:" 
-                                   HorizontalAlignment="Left"/>
+                        <TextBox Width="200"
+                                 Text="{Binding LastAddress, Converter={StaticResource IPAddressConverter}}"/>
 
-                        <TextBox Width="200" 
-                                 HorizontalAlignment="Left"
-                                 Text="{Binding FirstHost}"/>
+                        <ComboBox ItemsSource="{Binding CIDRMasks}"
+                                  SelectedItem="{Binding Subnet}"/>
 
                     </StackPanel>
 
-                    <StackPanel Orientation="Vertical"
-                                Margin="10"
-                                Spacing="10">
+                </StackPanel>
 
-                        <TextBlock Text="End IP Address:" 
-                                   HorizontalAlignment="Left"/>
+                <StackPanel Orientation="Vertical"
+                            Margin="10"
+                            Spacing="10">
 
-                        <StackPanel Orientation="Horizontal"
-                                    Spacing="10">
+                    <TextBlock Text="Ports:"/>
 
-                            <TextBox Width="200"
-                                     Text="{Binding LastHost}"/>
+                    <TextBox Width="200" 
+                             Text="80"
+                             HorizontalAlignment="Left"/>
 
-                            <ComboBox ItemsSource="{Binding CIDRMasks}"
-                                      SelectedItem="{Binding Subnet}"/>
+                </StackPanel>
 
-                        </StackPanel>
+        </WrapPanel>
 
-                    </StackPanel>
+        <StackPanel Orientation="Vertical"
+                    DockPanel.Dock="Bottom">
 
-                    <StackPanel Orientation="Vertical"
-                                Margin="10"
-                                Spacing="10">
+            <DataGrid Margin="10" 
+                      Height="245"
+                      BorderThickness="1" 
+                      ItemsSource="{Binding ScannedHosts}" 
+                      GridLinesVisibility="All" 
+                      CanUserResizeColumns="True"
+                      IsReadOnly="True"
+                      BorderBrush="DarkGray">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Width="*" 
+                                        Header="Address"
+                                        Binding="{Binding Address}" />
+                    <DataGridTextColumn Width="*" 
+                                        Header="Status" 
+                                        Binding="{Binding Status}" />
+                    <DataGridTextColumn Width="*"
+                                        Header="Open Ports"
+                                        Binding="{Binding OpenPorts}" />
+                </DataGrid.Columns>
+            </DataGrid>
 
-                        <TextBlock Text="Ports:"/>
+            <Button Height="30"
+                    Width="75"
+                    CornerRadius="5"
+                    HorizontalAlignment="Center"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Command="{Binding StartScan}">
+                        <TextBlock Text="Scan" />
+            </Button>
 
-                        <TextBox Width="200" 
-                                 Text="80"
-                                 HorizontalAlignment="Left"/>
+        </StackPanel>
 
-                    </StackPanel>
-
-            </WrapPanel>
-
-            <StackPanel Orientation="Vertical"
-                        DockPanel.Dock="Bottom">
-
-                <DataGrid Margin="10"
-                          Height="245" 
-                          BorderThickness="1" 
-                          ItemsSource="{Binding ScanResults}" 
-                          GridLinesVisibility="All" 
-                          IsReadOnly="True"
-                          BorderBrush="DarkGray">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Width="*" 
-                                            Header="Host"
-                                            Binding="{Binding Key}" />
-                        <DataGridTextColumn Header="Status" Width="*" Binding="{Binding Value}" />
-                    </DataGrid.Columns>
-                </DataGrid>
-
-                <Button Height="30"
-                        Width="75"
-                        CornerRadius="5"
-                        HorizontalAlignment="Center"
-                        HorizontalContentAlignment="Center"
-                        VerticalContentAlignment="Center"
-                        Command="{Binding StartScan}">
-                            <TextBlock Text="Scan" />
-                </Button>
-
-            </StackPanel>
-
-        </DockPanel> 
+    </DockPanel> 
 
 </Window>

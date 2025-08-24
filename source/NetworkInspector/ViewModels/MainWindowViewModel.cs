@@ -5,32 +5,42 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
+using NetworkInspector.Models;
 using AddressRange = NetworkInspector.Models.AddressRange;
 
 namespace NetworkInspector.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    #region Fields
+    private const int timeoutInSeconds = 60;
+
     private AddressRange addressRange;
     private Ping ping;
-    private ObservableCollection<KeyValuePair<string, string>> scanResults;
     private CancellationTokenSource cancellationTokens;
     private bool scanIsRunning;
 
+    #endregion
+
+    #region Constructor(s)
     public MainWindowViewModel()
     {
         addressRange = new([192, 168, 1, 1], [192, 168, 1, 254]);
         ping = new();
-        scanResults = new();
+        ScannedHosts = new();
         cancellationTokens = new();
 
     }
 
+    #endregion
+
     #region Properties 
-    public string[] CIDRMasks
+    public static List<string> CIDRMasks
     {
         get
         {
@@ -39,19 +49,18 @@ public partial class MainWindowViewModel : ViewModelBase
             for (int i = 0; i <= 32; i++)
                 results.Add('/' + Convert.ToString(i));
 
-            return results.ToArray();
+            return results;
 
         }
 
     }
 
-    public string FirstHost
+    public IPAddress FirstAddress
     {
-        get => addressRange.FirstAddress.ToString();
+        get => addressRange.FirstAddress;
         set
         {
-            if (IPAddress.TryParse(value, out IPAddress? address))
-                addressRange.FirstAddress = address;
+            addressRange.FirstAddress = value;
 
             OnPropertyChanged();
 
@@ -59,13 +68,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
     }
 
-    public string LastHost
+    public IPAddress LastAddress
     {
-        get => addressRange.LastAddress.ToString();
+        get => addressRange.LastAddress;
         set
         {
-            if (IPAddress.TryParse(value, out IPAddress? address))
-                addressRange.LastAddress = address;
+            addressRange.LastAddress = value;
 
             OnPropertyChanged();
 
@@ -83,42 +91,24 @@ public partial class MainWindowViewModel : ViewModelBase
             string cidrString = value.Substring(value.IndexOf(sep) + 1);
             int cidrLength = Convert.ToInt32(cidrString);
 
-            int addressLengthInBits = addressRange.FirstAddress.GetAddressBytes().Length * bitsPerByte;
-
-            byte[] firstAddressBytes = addressRange.FirstAddress.GetAddressBytes(),
-                   lastAddressBytes;
-
-            Array.Reverse(firstAddressBytes);
+            int addressLengthInBits = FirstAddress.GetAddressBytes().Length * bitsPerByte;
 
             uint subnetMaskInt = uint.MaxValue << (addressLengthInBits - cidrLength),
-                 firstAddressInt = BitConverter.ToUInt32(firstAddressBytes, 0),
+                 firstAddressInt = IPToInt(FirstAddress),
                  networkAddressInt = firstAddressInt & subnetMaskInt,
                  broadcastAddressInt = firstAddressInt | ~subnetMaskInt;
 
-            firstAddressBytes = BitConverter.GetBytes(networkAddressInt + 1);
-            lastAddressBytes = BitConverter.GetBytes(broadcastAddressInt - 1);
-
-            Array.Reverse(firstAddressBytes);
-            Array.Reverse(lastAddressBytes);
-
-            FirstHost = new IPAddress(firstAddressBytes).ToString();
-            LastHost = new IPAddress(lastAddressBytes).ToString();
+            FirstAddress = IntToIP(networkAddressInt + 1);
+            LastAddress = IntToIP(broadcastAddressInt - 1);
+            addressRange.SubnetMask = IntToIP(subnetMaskInt);
+            addressRange.NetworkAddress = IntToIP(networkAddressInt);
+            addressRange.BroadcastAddress = IntToIP(broadcastAddressInt);
 
         }
 
     }
 
-    public ObservableCollection<KeyValuePair<string, string>> ScanResults
-    {
-        get => scanResults;
-        set
-        {
-            scanResults = value;
-            OnPropertyChanged();
-
-        }
-
-    }
+    public ObservableCollection<HostAddressViewModel> ScannedHosts { get; set; }
 
     #endregion
 
@@ -137,50 +127,39 @@ public partial class MainWindowViewModel : ViewModelBase
 
         }
 
-        ScanResults.Clear();
+        ScannedHosts.Clear();
 
-        Dispatcher.UIThread.InvokeAsync(() => Scan(cancellationTokens.Token));
+        Dispatcher.UIThread.InvokeAsync(() => Scan(cancellationTokens.Token, FirstAddress, LastAddress));
 
         scanIsRunning = true;
 
     }
 
-    public async Task Scan(CancellationToken cancellationToken)
+    public async Task Scan(CancellationToken cancellationToken, IPAddress firstAddress, IPAddress lastAddress)
     {
+        List<Task> portScanTasks = new();
         try
         {
-            byte[] firsAddressBytes = addressRange.FirstAddress.GetAddressBytes(),
-                   lastAddressBytes = addressRange.LastAddress.GetAddressBytes();
-
-            // GetAddressBytes return bytes in Network Byte Order, which is Big-Endian. The below reverses the arrays to account for this:
-            Array.Reverse(firsAddressBytes);
-            Array.Reverse(lastAddressBytes);
-
-            uint firstAddressInt,
-                 lastAddressInt;
-
-            if (addressRange.FirstAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
+            if (firstAddress.AddressFamily != AddressFamily.InterNetwork)
                 return;
 
-            firstAddressInt = BitConverter.ToUInt32(firsAddressBytes, 0);
-            lastAddressInt = BitConverter.ToUInt32(lastAddressBytes, 0);
+            uint firstAddressInt = IPToInt(firstAddress),
+                 lastAddressInt = IPToInt(lastAddress);
 
             for (uint i = firstAddressInt; i <= lastAddressInt && !cancellationToken.IsCancellationRequested; i++)
             {
-                byte[] currentIPBytes = BitConverter.GetBytes(i);
+                HostAddress host = new(IntToIP(i));
 
-                Array.Reverse(currentIPBytes);
+                host.Status = (await ping.SendPingAsync(host.Address, timeoutInSeconds)).Status;
 
-                IPAddress currentIP = new(currentIPBytes);
+                ScannedHosts.Add(new(host));
 
-                PingReply reply = await ping.SendPingAsync(currentIP, 60);
+                portScanTasks.Add(PortScan(ScannedHosts.Last().HostAddress, cancellationToken));
 
-                ScanResults.Add(new KeyValuePair<string, string>(currentIP.ToString(), reply.Status.ToString()));
-#if DEBUG
-                Trace.WriteLine(scanResults.Last().Key + ": " + scanResults.Last().Value);
-#endif
             }
 
+            await Task.WhenAll(portScanTasks);
+ 
         }
         catch (Exception ex)
         {
@@ -189,10 +168,44 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         scanIsRunning = false;
+
 #if DEBUG
         Trace.WriteLine("Scan complete");
 #endif
     }
+
+    public async Task PortScan(HostAddress host, CancellationToken cancellationToken)
+    {
+        await Task.Run(() =>
+        {
+            using (TcpClient tcpClient = new TcpClient())
+            {
+                try
+                {
+                    if (tcpClient.ConnectAsync(host.Address, 80).Wait(timeoutInSeconds, cancellationToken))
+                        Trace.WriteLine("open");
+
+                }
+                catch (Exception ex)
+                {
+                    tcpClient.Close();
+                    tcpClient.Dispose();
+                    Trace.WriteLine(ex);
+
+                }
+
+            }
+
+        },
+        cancellationToken);
+
+    }
+
+    private IPAddress IntToIP(uint integer) =>
+        new(BitConverter.GetBytes(integer).Reverse().ToArray());
+
+    private uint IPToInt(IPAddress address) =>
+        BitConverter.ToUInt32(address.GetAddressBytes().Reverse().ToArray(), 0);
 
     #endregion
 
