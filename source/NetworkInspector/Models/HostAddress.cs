@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.NetworkInformation;
 
@@ -24,6 +25,6 @@ public class HostAddress
 
     public byte[] MacAddress { get; set; }
 
-    public List<int> OpenPorts { get; set; }
+    public ObservableCollection<int> OpenPorts { get; set; }
     
 }

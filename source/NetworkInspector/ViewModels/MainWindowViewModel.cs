@@ -9,7 +9,6 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
-using CommunityToolkit.Mvvm.ComponentModel;
 using NetworkInspector.Models;
 using AddressRange = NetworkInspector.Models.AddressRange;
 
@@ -18,7 +17,7 @@ namespace NetworkInspector.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
     #region Fields
-    private const int timeoutInSeconds = 60;
+    private const int timeout = 100;
 
     private AddressRange addressRange;
     private Ping ping;
@@ -34,6 +33,8 @@ public partial class MainWindowViewModel : ViewModelBase
         ping = new();
         ScannedHosts = new();
         cancellationTokens = new();
+        Ports.Add(22);
+        Ports.Add(80);
 
     }
 
@@ -81,6 +82,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
     }
 
+    public ObservableCollection<int> Ports
+    {
+        get => addressRange.Ports;
+        set => addressRange.Ports = value;
+
+    }
+
     public string Subnet
     {
         set
@@ -108,7 +116,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     }
 
-    public ObservableCollection<HostAddressViewModel> ScannedHosts { get; set; }
+    public ObservableCollection<HostAddress> ScannedHosts { get; set; }
 
     #endregion
 
@@ -138,6 +146,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public async Task Scan(CancellationToken cancellationToken, IPAddress firstAddress, IPAddress lastAddress)
     {
         List<Task> portScanTasks = new();
+        
         try
         {
             if (firstAddress.AddressFamily != AddressFamily.InterNetwork)
@@ -150,16 +159,17 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 HostAddress host = new(IntToIP(i));
 
-                host.Status = (await ping.SendPingAsync(host.Address, timeoutInSeconds)).Status;
+                host.Status = (await ping.SendPingAsync(host.Address, timeout)).Status;
 
-                ScannedHosts.Add(new(host));
+                ScannedHosts.Add(host);
 
-                portScanTasks.Add(PortScan(ScannedHosts.Last().HostAddress, cancellationToken));
+                foreach(int port in Ports)
+                    portScanTasks.Add(PortScan(ScannedHosts.Last(), port, cancellationToken));
 
             }
 
             await Task.WhenAll(portScanTasks);
- 
+
         }
         catch (Exception ex)
         {
@@ -174,7 +184,7 @@ public partial class MainWindowViewModel : ViewModelBase
 #endif
     }
 
-    public async Task PortScan(HostAddress host, CancellationToken cancellationToken)
+    public async Task PortScan(HostAddress host, int port, CancellationToken cancellationToken)
     {
         await Task.Run(() =>
         {
@@ -182,8 +192,12 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 try
                 {
-                    if (tcpClient.ConnectAsync(host.Address, 80).Wait(timeoutInSeconds, cancellationToken))
-                        Trace.WriteLine("open");
+                    if (tcpClient.ConnectAsync(host.Address, port).Wait(timeout, cancellationToken))
+                    {
+                        host.OpenPorts.Add(port);
+                        host.Status = IPStatus.Success;
+
+                    }
 
                 }
                 catch (Exception ex)

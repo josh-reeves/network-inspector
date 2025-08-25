@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Net;
 
 namespace NetworkInspector.Models;
@@ -40,7 +41,7 @@ public class AddressRange
     public IPAddress? NetworkAddress { get; set; }
     public IPAddress? BroadcastAddress { get; set; }
 
-    public List<int> Ports { get; set; }
+    public ObservableCollection<int> Ports { get; set; }
     #endregion
 
 }
