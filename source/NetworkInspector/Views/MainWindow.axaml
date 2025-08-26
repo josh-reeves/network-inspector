@@ -21,12 +21,18 @@
 
     <Window.Resources>
         <converters:IPAddressConverter x:Key="IPAddressConverter" />
-        <converters:ListConverter x:Key ="ListConverter" />
+        <converters:PortListConverter x:Key ="PortListConverter" />
     </Window.Resources>
 
-    <DockPanel >
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-        <WrapPanel Margin="10"
+        <WrapPanel Grid.Row="0"
+                   Margin="10"
                    HorizontalAlignment="Center"
                    DockPanel.Dock="Top">
 
@@ -39,7 +45,15 @@
 
                     <TextBox Width="200" 
                              HorizontalAlignment="Left"
-                             Text="{Binding FirstAddress, Converter={StaticResource IPAddressConverter}}"/>
+                             Text="{Binding FirstAddress,
+                                    Mode=OneWayToSource,
+                                    Converter={StaticResource IPAddressConverter}}">
+                        <TextBox.Styles>
+                            <Style Selector="TextBox">
+                                <Setter Property="Text" Value="192.168.1.1" />
+                            </Style>
+                        </TextBox.Styles>
+                    </TextBox>
 
                 </StackPanel>
 
@@ -54,10 +68,18 @@
                                 Spacing="10">
 
                         <TextBox Width="200"
-                                 Text="{Binding LastAddress, Converter={StaticResource IPAddressConverter}}"/>
+                                 Text="{Binding LastAddress, 
+                                        Mode=OneWayToSource,
+                                        Converter={StaticResource IPAddressConverter}}">
+                            <TextBox.Styles>
+                                <Style Selector="TextBox">
+                                    <Setter Property="Text" Value="192.168.1.254" />
+                                </Style>
+                            </TextBox.Styles>
+                        </TextBox>
 
                         <ComboBox ItemsSource="{Binding CIDRMasks}"
-                                  SelectedItem="{Binding Subnet}"/>
+                                  SelectedItem="{Binding CIDRString}"/>
 
                     </StackPanel>
 
@@ -70,62 +92,91 @@
                     <TextBlock Text="Ports:"/>
 
                     <TextBox Width="200" 
-                             Text="{Binding Ports, Converter={StaticResource ListConverter}, ConverterParameter=', '}"
-                             HorizontalAlignment="Left"/>
+                             Text="{Binding Ports,
+                                    Mode=OneWayToSource,
+                                    Converter={StaticResource PortListConverter}, 
+                                    ConverterParameter=', '}}"
+                             HorizontalAlignment="Left">
+                        <TextBox.Styles>
+                            <Style Selector="TextBox">
+                                <Setter Property="Text" Value="22, 80" />
+                            </Style>
+                        </TextBox.Styles>
+                    </TextBox>
 
                 </StackPanel>
 
         </WrapPanel>
 
-        <StackPanel Orientation="Vertical"
-                    DockPanel.Dock="Bottom">
+        <DataGrid Grid.Row="1"
+                  Margin="5, 0"
+                  BorderThickness="1" 
+                  ItemsSource="{Binding ScannedHosts}" 
+                  GridLinesVisibility="All" 
+                  CanUserResizeColumns="True"
+                  IsReadOnly="True"
+                  BorderBrush="DarkGray">
+            <DataGrid.Columns>
+                <DataGridTextColumn Width="Auto" 
+                                    Header="Address"
+                                    Binding="{Binding Address}" />
+                <DataGridTextColumn Width="Auto" 
+                                    Header="Status" 
+                                    Binding="{Binding Status}" />
+                <DataGridTemplateColumn Width="*"
+                                        Header="Open Ports">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ItemsControl VerticalAlignment="Center"
+                                          Margin="10, 0"
+                                          ItemsSource="{Binding OpenPorts}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="models:HostAddress">
+                                        <TextBlock Text="{Binding .}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"
+                                                    Spacing="10" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
 
-            <DataGrid Margin="10" 
-                      Height="245"
-                      BorderThickness="1" 
-                      ItemsSource="{Binding ScannedHosts}" 
-                      GridLinesVisibility="All" 
-                      CanUserResizeColumns="True"
-                      IsReadOnly="True"
-                      BorderBrush="DarkGray">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Width="*" 
-                                        Header="Address"
-                                        Binding="{Binding Address}" />
-                    <DataGridTextColumn Width="*" 
-                                        Header="Status" 
-                                        Binding="{Binding Status}" />
-                    <DataGridTemplateColumn Width="*"
-                                            Header="Open Ports">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <ItemsControl VerticalAlignment="Center"
-                                              Margin="10"
-                                              ItemsSource="{Binding OpenPorts}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate DataType="models:HostAddress">
-                                            <TextBlock Text="{Binding .}" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-            </DataGrid>
+            <DataGrid.Styles>
+                <Style Selector="DataGridColumnHeader">
+                    <Setter Property="Padding" Value="10, 0, 35, 0" />
+                </Style>
+            </DataGrid.Styles>
+        </DataGrid>
 
-            <Button Height="30"
-                    Width="75"
-                    CornerRadius="5"
-                    HorizontalAlignment="Center"
-                    HorizontalContentAlignment="Center"
-                    VerticalContentAlignment="Center"
-                    Command="{Binding StartScan}">
-                        <TextBlock Text="Scan" />
-            </Button>
+        <Button Grid.Row="2"
+                Height="30"
+                Width="75"
+                Margin="10"
+                CornerRadius="5"
+                HorizontalAlignment="Center"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Command="{Binding StartScan}">
 
-        </StackPanel>
+            <TextBlock Classes.ScanIsRunning="{Binding ScanIsRunning}">
+                <TextBlock.Styles>
+                    <Style Selector="TextBlock:not(.ScanIsRunning)">
+                        <Setter Property="Text" Value="Scan" />
+                    </Style>
+                    <Style Selector="TextBlock.ScanIsRunning">
+                        <Setter Property="Text" Value="Cancel" />
+                    </Style>
+                </TextBlock.Styles>
+            </TextBlock>
+            
+        </Button>
 
-    </DockPanel> 
+    </Grid> 
 
 </Window>

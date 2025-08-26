@@ -28,12 +28,15 @@ public class AddressRange
             ]);
 
         Ports = new();
+        CIDRString = string.Empty;
 
     }
 
     #endregion
 
     #region Properties
+    public string CIDRString { get; set; }
+
     public IPAddress FirstAddress { get; set; }
     public IPAddress LastAddress { get; set; }
 

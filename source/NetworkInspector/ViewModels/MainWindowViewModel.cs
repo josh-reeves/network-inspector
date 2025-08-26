@@ -24,6 +24,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private CancellationTokenSource cancellationTokens;
     private bool scanIsRunning;
 
+
     #endregion
 
     #region Constructor(s)
@@ -33,14 +34,25 @@ public partial class MainWindowViewModel : ViewModelBase
         ping = new();
         ScannedHosts = new();
         cancellationTokens = new();
-        Ports.Add(22);
-        Ports.Add(80);
 
     }
 
     #endregion
 
     #region Properties 
+    public bool ScanIsRunning
+    {
+        get => scanIsRunning;
+
+        set
+        {
+            scanIsRunning = value;
+
+            OnPropertyChanged();
+        }
+
+    }
+
     public static List<string> CIDRMasks
     {
         get
@@ -48,7 +60,7 @@ public partial class MainWindowViewModel : ViewModelBase
             List<string> results = new();
 
             for (int i = 0; i <= 32; i++)
-                results.Add('/' + Convert.ToString(i));
+                results.Add('/' + i.ToString());
 
             return results;
 
@@ -89,15 +101,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
     }
 
-    public string Subnet
+    public string CIDRString
     {
+        get => addressRange.CIDRString;
+
         set
         {
+            addressRange.CIDRString = value;
+
             const int bitsPerByte = 8;
             const char sep = '/';
 
-            string cidrString = value.Substring(value.IndexOf(sep) + 1);
-            int cidrLength = Convert.ToInt32(cidrString);
+            int cidrLength = Convert.ToInt32(value.Substring(value.IndexOf(sep) + 1));
 
             int addressLengthInBits = FirstAddress.GetAddressBytes().Length * bitsPerByte;
 
@@ -123,7 +138,7 @@ public partial class MainWindowViewModel : ViewModelBase
     #region Methods
     public void StartScan()
     {
-        if (scanIsRunning)
+        if (ScanIsRunning)
         {
             cancellationTokens.Cancel();
 
@@ -139,7 +154,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Dispatcher.UIThread.InvokeAsync(() => Scan(cancellationTokens.Token, FirstAddress, LastAddress));
 
-        scanIsRunning = true;
+        ScanIsRunning = true;
 
     }
 
@@ -164,7 +179,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 ScannedHosts.Add(host);
 
                 foreach(int port in Ports)
-                    portScanTasks.Add(PortScan(ScannedHosts.Last(), port, cancellationToken));
+                    portScanTasks.Add(Task.Run( () => PortScan(ScannedHosts.Last(), port, cancellationToken)));
 
             }
 
@@ -177,7 +192,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         }
 
-        scanIsRunning = false;
+        ScanIsRunning = false;
 
 #if DEBUG
         Trace.WriteLine("Scan complete");
@@ -192,6 +207,7 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 try
                 {
+                    Trace.WriteLine(port);
                     if (tcpClient.ConnectAsync(host.Address, port).Wait(timeout, cancellationToken))
                     {
                         host.OpenPorts.Add(port);

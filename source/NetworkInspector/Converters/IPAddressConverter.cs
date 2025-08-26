@@ -7,8 +7,6 @@ namespace NetworkInspector.Converters;
 
 public class IPAddressConverter : IValueConverter
 {
-    public static readonly IPAddressConverter Instance = new();
-
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         IPAddress? address;

@@ -1,18 +1,18 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Avalonia.Data.Converters;
 
 namespace NetworkInspector.Converters;
 
-public class ListConverter : IValueConverter
+public class PortListConverter : IValueConverter
 {
-    public static readonly ListConverter Instance = new();
 
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is not ObservableCollection<int> list)
+        if (value is not ObservableCollection<int> collection)
             return new ArgumentException();
 
         if (targetType.IsAssignableTo(typeof(string)))
@@ -20,12 +20,12 @@ public class ListConverter : IValueConverter
             string result = string.Empty,
                    sep = parameter as string ?? string.Empty;
 
-            foreach (int item in list)
+            foreach (int integer in collection)
             {
-                if (list.IndexOf(item) == (list.Count - 1))
-                    result += item.ToString()?.Trim();
+                if (collection.IndexOf(integer) == (collection.Count - 1))
+                    result += integer.ToString();
                 else
-                    result += item + sep;
+                    result += integer + sep;
 
             }
 
@@ -39,18 +39,22 @@ public class ListConverter : IValueConverter
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is not string collectionString)
-            return new ArgumentException();
+        string collectionString = value as string ?? string.Empty;
 
-        if (targetType.IsAssignableTo(typeof(IList)))
+        if (targetType.IsAssignableTo(typeof(ObservableCollection<int>)))
         {
             string sep = parameter as string ?? string.Empty;
 
             ObservableCollection<int> collection = new();
 
             foreach (string str in collectionString.Split(sep))
-                if (int.TryParse(str, out int integer))
+            {
+                str.Trim().Replace(sep, string.Empty);
+
+                if (int.TryParse(str.Trim(), out int integer))
                     collection.Add(System.Convert.ToInt32(integer));
+
+            }
 
             return collection;
 
