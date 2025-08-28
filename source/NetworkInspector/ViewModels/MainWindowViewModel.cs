@@ -17,13 +17,13 @@ namespace NetworkInspector.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
     #region Fields
-    private const int timeout = 100;
+    private const int timeout = 100,
+                      bitsPerByte = 8;
 
     private AddressRange addressRange;
     private Ping ping;
     private CancellationTokenSource cancellationTokens;
     private bool scanIsRunning;
-
 
     #endregion
 
@@ -34,12 +34,56 @@ public partial class MainWindowViewModel : ViewModelBase
         ping = new();
         ScannedHosts = new();
         cancellationTokens = new();
+        CIDRMask = CIDRMasks[23];
 
     }
 
     #endregion
 
     #region Properties 
+    public static List<int> CIDRMasks
+    {
+        get
+        {
+            List<int> results = new();
+
+            for (int i = 1; i <= 32; i++)
+                results.Add(i);
+
+            return results;
+
+        }
+
+    }
+
+    public int CIDRMask
+    {
+        get => addressRange.CIDRMask;
+
+        set
+        {
+            if (!CIDRMasks.Contains(value))
+                return;
+
+            addressRange.CIDRMask = value;
+
+            int addressLengthInBits = FirstAddress.GetAddressBytes().Length * bitsPerByte;
+
+            uint subnetMaskInt = uint.MaxValue << (addressLengthInBits - addressRange.CIDRMask),
+                 firstAddressInt = IPToInt(FirstAddress),
+                 networkAddressInt = firstAddressInt & subnetMaskInt,
+                 broadcastAddressInt = firstAddressInt | ~subnetMaskInt;
+
+            FirstAddress = IntToIP(networkAddressInt + 1);
+            LastAddress = IntToIP(broadcastAddressInt - 1);
+            addressRange.SubnetMask = IntToIP(subnetMaskInt);
+            addressRange.NetworkAddress = IntToIP(networkAddressInt);
+            addressRange.BroadcastAddress = IntToIP(broadcastAddressInt);
+
+        }
+
+    }
+
     public bool ScanIsRunning
     {
         get => scanIsRunning;
@@ -49,21 +93,6 @@ public partial class MainWindowViewModel : ViewModelBase
             scanIsRunning = value;
 
             OnPropertyChanged();
-        }
-
-    }
-
-    public List<int> CIDRMasks
-    {
-        get
-        {
-            List<int> results = new();
-
-            for (int i = 0; i <= 32; i++)
-                results.Add(i);
-
-            return results;
-
         }
 
     }
@@ -98,33 +127,6 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         get => addressRange.Ports;
         set => addressRange.Ports = value;
-
-    }
-
-    public int CIDRString
-    {
-        get => addressRange.CIDRString;
-
-        set
-        {
-            const int bitsPerByte = 8;
-
-            addressRange.CIDRString = value;
-
-            int addressLengthInBits = FirstAddress.GetAddressBytes().Length * bitsPerByte;
-
-            uint subnetMaskInt = uint.MaxValue << (addressLengthInBits - addressRange.CIDRString),
-                 firstAddressInt = IPToInt(FirstAddress),
-                 networkAddressInt = firstAddressInt & subnetMaskInt,
-                 broadcastAddressInt = firstAddressInt | ~subnetMaskInt;
-
-            FirstAddress = IntToIP(networkAddressInt + 1);
-            LastAddress = IntToIP(broadcastAddressInt - 1);
-            addressRange.SubnetMask = IntToIP(subnetMaskInt);
-            addressRange.NetworkAddress = IntToIP(networkAddressInt);
-            addressRange.BroadcastAddress = IntToIP(broadcastAddressInt);
-
-        }
 
     }
 
@@ -190,7 +192,6 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         ScanIsRunning = false;
-
 #if DEBUG
         Trace.WriteLine("Scan complete");
 #endif

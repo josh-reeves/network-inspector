@@ -28,14 +28,13 @@ public class AddressRange
             ]);
 
         Ports = new();
-        CIDRString = 24;
 
     }
 
     #endregion
 
     #region Properties
-    public int CIDRString { get; set; }
+    public int CIDRMask { get; set; }
 
     public IPAddress FirstAddress { get; set; }
     public IPAddress LastAddress { get; set; }

@@ -69,7 +69,7 @@
                         <ComboBox ItemsSource="{Binding CIDRMasks, 
                                                 Converter={StaticResource StringFormatter},
                                                 ConverterParameter='/{0}'}"
-                                  SelectedItem="{Binding CIDRString,
+                                  SelectedItem="{Binding CIDRMask,
                                                  Converter={StaticResource StringFormatter},
                                                  ConverterParameter='/{0}'}"/>
 

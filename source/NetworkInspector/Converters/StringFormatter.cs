@@ -3,12 +3,16 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Avalonia.Data.Converters;
 
 namespace NetworkInspector.Converters;
 
 public class StringFormatter : IValueConverter
 {
+    private const string insertPattern = @"\{\d+\}";
+
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
 #if DEBUG
@@ -56,8 +60,9 @@ public class StringFormatter : IValueConverter
         string valueString = System.Convert.ToString(value) ?? string.Empty,
                formatString = parameter as string ?? string.Empty;
 
-        valueString = valueString.TrimStart(formatString.ToCharArray());
-        valueString = valueString.TrimEnd(formatString.ToCharArray());
+        formatString = Regex.Replace(formatString, insertPattern, string.Empty);
+        valueString = valueString.Replace(string.Concat(formatString.Intersect(formatString)), string.Empty);
+
 #if DEBUG
         Trace.WriteLine("ConvertBack Out: " + valueString);
 #endif
