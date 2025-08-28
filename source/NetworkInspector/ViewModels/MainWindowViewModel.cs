@@ -53,14 +53,14 @@ public partial class MainWindowViewModel : ViewModelBase
 
     }
 
-    public static List<string> CIDRMasks
+    public List<int> CIDRMasks
     {
         get
         {
-            List<string> results = new();
+            List<int> results = new();
 
             for (int i = 0; i <= 32; i++)
-                results.Add('/' + i.ToString());
+                results.Add(i);
 
             return results;
 
@@ -101,22 +101,19 @@ public partial class MainWindowViewModel : ViewModelBase
 
     }
 
-    public string CIDRString
+    public int CIDRString
     {
         get => addressRange.CIDRString;
 
         set
         {
-            addressRange.CIDRString = value;
-
             const int bitsPerByte = 8;
-            const char sep = '/';
 
-            int cidrLength = Convert.ToInt32(value.Substring(value.IndexOf(sep) + 1));
+            addressRange.CIDRString = value;
 
             int addressLengthInBits = FirstAddress.GetAddressBytes().Length * bitsPerByte;
 
-            uint subnetMaskInt = uint.MaxValue << (addressLengthInBits - cidrLength),
+            uint subnetMaskInt = uint.MaxValue << (addressLengthInBits - addressRange.CIDRString),
                  firstAddressInt = IPToInt(FirstAddress),
                  networkAddressInt = firstAddressInt & subnetMaskInt,
                  broadcastAddressInt = firstAddressInt | ~subnetMaskInt;

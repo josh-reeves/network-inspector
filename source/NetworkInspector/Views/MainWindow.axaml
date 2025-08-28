@@ -9,7 +9,7 @@
         x:Class="NetworkInspector.Views.MainWindow"
         x:DataType="viewModels:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="NetworkInspector"
+        Title="Network Inspector"
         Width="640"
         Height="480">
 
@@ -22,6 +22,7 @@
     <Window.Resources>
         <converters:IPAddressConverter x:Key="IPAddressConverter" />
         <converters:PortListConverter x:Key ="PortListConverter" />
+        <converters:StringFormatter x:Key="StringFormatter" />
     </Window.Resources>
 
     <Grid>
@@ -46,14 +47,8 @@
                     <TextBox Width="200" 
                              HorizontalAlignment="Left"
                              Text="{Binding FirstAddress,
-                                    Mode=OneWayToSource,
-                                    Converter={StaticResource IPAddressConverter}}">
-                        <TextBox.Styles>
-                            <Style Selector="TextBox">
-                                <Setter Property="Text" Value="192.168.1.1" />
-                            </Style>
-                        </TextBox.Styles>
-                    </TextBox>
+                                    Converter={StaticResource IPAddressConverter},
+                                    UpdateSourceTrigger=LostFocus}"/>
 
                 </StackPanel>
 
@@ -69,17 +64,14 @@
 
                         <TextBox Width="200"
                                  Text="{Binding LastAddress, 
-                                        Mode=OneWayToSource,
-                                        Converter={StaticResource IPAddressConverter}}">
-                            <TextBox.Styles>
-                                <Style Selector="TextBox">
-                                    <Setter Property="Text" Value="192.168.1.254" />
-                                </Style>
-                            </TextBox.Styles>
-                        </TextBox>
+                                        Converter={StaticResource IPAddressConverter}}" />
 
-                        <ComboBox ItemsSource="{Binding CIDRMasks}"
-                                  SelectedItem="{Binding CIDRString}"/>
+                        <ComboBox ItemsSource="{Binding CIDRMasks, 
+                                                Converter={StaticResource StringFormatter},
+                                                ConverterParameter='/{0}'}"
+                                  SelectedItem="{Binding CIDRString,
+                                                 Converter={StaticResource StringFormatter},
+                                                 ConverterParameter='/{0}'}"/>
 
                     </StackPanel>
 

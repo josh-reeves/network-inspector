@@ -28,14 +28,14 @@ public class AddressRange
             ]);
 
         Ports = new();
-        CIDRString = string.Empty;
+        CIDRString = 24;
 
     }
 
     #endregion
 
     #region Properties
-    public string CIDRString { get; set; }
+    public int CIDRString { get; set; }
 
     public IPAddress FirstAddress { get; set; }
     public IPAddress LastAddress { get; set; }
@@ -45,6 +45,7 @@ public class AddressRange
     public IPAddress? BroadcastAddress { get; set; }
 
     public ObservableCollection<int> Ports { get; set; }
+
     #endregion
 
 }

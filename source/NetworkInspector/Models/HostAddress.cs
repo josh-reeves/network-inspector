@@ -1,11 +1,11 @@
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.NetworkInformation;
+using NetworkInspector.Interfaces;
 
 namespace NetworkInspector.Models;
 
-public class HostAddress
+public class HostAddress : IHostAddress
 {
     #region Constructor(s)
     public HostAddress(IPAddress address, IPStatus status = IPStatus.Unknown)
