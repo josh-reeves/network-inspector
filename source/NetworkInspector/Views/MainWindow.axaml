@@ -146,6 +146,36 @@
             </DataGrid.Styles>
         </DataGrid>
 
+        <Grid Grid.Row="1"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Classes.ScanIsRunning="{Binding ScanIsRunning}">
+
+            <Rectangle HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Width="85"
+                    Height="85"
+                    Fill="#353535"
+                    Opacity="0.50"
+                    RadiusX="5"
+                    RadiusY="5" />
+
+            <TextBlock  HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="White"
+                        FontSize="12"
+                        Text="Scanning..." />
+
+            <Grid.Styles>
+                <Style Selector="Grid:not(.ScanIsRunning)">
+                    <Setter Property="IsVisible" Value="False" />
+                </Style>
+                <Style Selector="Grid.ScanIsRunning">
+                    <Setter Property="IsVisible" Value="True" />
+                </Style>
+            </Grid.Styles>
+        </Grid>
+
         <Button Grid.Row="2"
                 Height="30"
                 Width="75"
