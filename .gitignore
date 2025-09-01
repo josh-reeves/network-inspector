@@ -38,9 +38,9 @@ bin/x86/
 obj/x86/
 
 [Ww][Ii][Nn]32/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-[Aa][Rr][Mm]64[Ee][Cc]/
+/source/**/[Aa][Rr][Mm]/
+/source/**/[Aa][Rr][Mm]64/
+/source/**/[Aa][Rr][Mm]64[Ee][Cc]/
 bld/
 [Oo]bj/
 [Oo]ut/
