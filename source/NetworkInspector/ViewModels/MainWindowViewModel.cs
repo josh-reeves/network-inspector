@@ -162,7 +162,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         
         ScanIsRunning = true;
-        
+
         List<Task> portScanTasks = new();
 
         try
@@ -190,8 +190,9 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+#if DEBUG
             Trace.WriteLine(ex);
-
+#endif
         }
 
         ScanIsRunning = false;
@@ -217,8 +218,9 @@ public partial class MainWindowViewModel : ViewModelBase
                 }
                 catch (Exception ex)
                 {
+#if DEBUG                    
                     Trace.WriteLine(ex);
-
+#endif
                 }
                 finally
                 {
