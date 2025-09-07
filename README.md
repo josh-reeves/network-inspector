@@ -1,5 +1,5 @@
 <p align="center">
-     <img src="./branding/iconography/logo/logo_network-inspector_002/logo_network-inspector_002_003.svg" 
+     <img src="./branding/iconography/webicon.svg" 
           width="45%" />
 </p>
 

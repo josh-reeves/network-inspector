@@ -8,7 +8,7 @@
         mc:Ignorable="d" d:DesignWidth="640" d:DesignHeight="480"
         x:Class="NetworkInspector.Views.MainWindow"
         x:DataType="viewModels:MainWindowViewModel"
-        Icon="/Assets/network-inspector.png"
+        Icon="/Assets/icon-network-inspector.png"
         Title="Network Inspector"
         Width="640"
         Height="480">
@@ -83,18 +83,44 @@
 
                     <TextBlock Text="Ports:"/>
 
-                    <TextBox Width="200" 
-                             Text="{Binding Ports,
-                                    Mode=OneWayToSource,
-                                    Converter={StaticResource PortListConverter}, 
-                                    ConverterParameter=', '}}"
-                             HorizontalAlignment="Left">
-                        <TextBox.Styles>
-                            <Style Selector="TextBox">
-                                <Setter Property="Text" Value="22, 80" />
-                            </Style>
-                        </TextBox.Styles>
-                    </TextBox>
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="20">
+
+                        <TextBox Width="200" 
+                                 Text="{Binding Ports,
+                                        Mode=OneWayToSource,
+                                        Converter={StaticResource PortListConverter}, 
+                                        ConverterParameter=', '}}"
+                                 ToolTip.Tip="Specify ports to scan as individual ports or ranges separated by commas. For example, '20-22, 80' scans ports 20, 21, 22, and 80."
+                                 HorizontalAlignment="Left">
+                            <TextBox.Styles>
+                                <Style Selector="TextBox">
+                                    <Setter Property="Text" Value="20 - 22, 80" />
+                                </Style>
+                            </TextBox.Styles>
+                        </TextBox>
+
+                        <Ellipse Width="20"
+                                 Height="20"
+                                 Fill="LightGray" 
+                                 ToolTip.Tip="{Binding NetworkInformation}">
+                            <Ellipse.OpacityMask>
+                                <DrawingBrush>
+                                    <DrawingBrush.Drawing>
+                                        <GeometryDrawing Brush="Black" 
+                                                         Geometry="M16,1C24.279,1 31,7.721 31,16C31,24.279 24.279,31 16,31C7.721,31 1,24.279 1,16C1,
+                                                                   7.721 7.721,1 16,1ZM17.438,12.625L14.521,12.625L14.521,24.167L17.438,24.167L17.438,
+                                                                   12.625ZM16,11.25C16.514,11.25 16.941,11.087 17.281,10.76C17.622,10.434 17.792,
+                                                                   10.028 17.792,9.542C17.792,9.056 17.622,8.649 17.281,8.323C16.941,7.997 16.514,
+                                                                   7.833 16,7.833C15.486,7.833 15.059,7.997 14.719,8.323C14.378,8.649 14.208,9.056
+                                                                   14.208,9.542C14.208,10.028 14.378,10.434 14.719,10.76C15.059,11.087 15.486,11.25
+                                                                   16,11.25Z"/>
+                                    </DrawingBrush.Drawing>
+                                </DrawingBrush>
+                            </Ellipse.OpacityMask>
+                        </Ellipse>
+
+                    </StackPanel>
 
                 </StackPanel>
 
@@ -130,7 +156,7 @@
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <StackPanel Orientation="Horizontal"
-                                                    Spacing="10" />
+                                                    Spacing="5" />
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                             </ItemsControl>
@@ -147,24 +173,56 @@
         </DataGrid>
 
         <Grid Grid.Row="1"
+              Width="175"
               HorizontalAlignment="Center"
               VerticalAlignment="Center"
+              IsHitTestVisible="False"
               Classes.ScanIsRunning="{Binding ScanIsRunning}">
 
-            <Rectangle HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Width="85"
-                    Height="85"
-                    Fill="#353535"
-                    Opacity="0.50"
-                    RadiusX="5"
-                    RadiusY="5" />
+            <Rectangle Width="250"
+                       Height="75"
+                       HorizontalAlignment="Center"
+                       Fill="#353535"
+                       Opacity="0.35"
+                       RadiusX="5"
+                       RadiusY="5" />
 
-            <TextBlock  HorizontalAlignment="Center"
+            <StackPanel HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="White"
-                        FontSize="12"
-                        Text="Scanning..." />
+                        Orientation="Vertical"
+                        Spacing="10">
+
+                <TextBlock Text="Scanning..."
+                           HorizontalAlignment="Center"
+                           FontSize="16"
+                           Foreground="White">
+                    <TextBlock.Styles>
+                        <Style Selector="TextBlock">
+                            <Style.Animations>
+                                <Animation Duration="0:0:2.5" IterationCount="INFINITE">
+                                    <KeyFrame Cue="0%">
+                                        <Setter Property="Opacity" Value="1"/>
+                                    </KeyFrame>
+                                    <KeyFrame Cue="50%">
+                                        <Setter Property="Opacity" Value="0.25"/>
+                                    </KeyFrame>
+                                    <KeyFrame Cue="100%">
+                                        <Setter Property="Opacity" Value="1"/>
+                                    </KeyFrame>
+                                </Animation>
+                            </Style.Animations>
+                        </Style>
+                    </TextBlock.Styles>
+                </TextBlock>
+
+                <ProgressBar HorizontalAlignment="Center"
+                             VerticalAlignment="Bottom"
+                             Width="200"
+                             Height="5"
+                             IsIndeterminate="True"/>
+
+            </StackPanel>
+
 
             <Grid.Styles>
                 <Style Selector="Grid:not(.ScanIsRunning)">

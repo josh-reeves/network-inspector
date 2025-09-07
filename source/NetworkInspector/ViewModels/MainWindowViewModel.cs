@@ -8,6 +8,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Threading;
 using NetworkInspector.Interfaces;
 using NetworkInspector.Models;
@@ -83,6 +84,8 @@ public partial class MainWindowViewModel : ViewModelBase
             addressRange.NetworkAddress = IntToIP(networkAddressInt);
             addressRange.BroadcastAddress = IntToIP(broadcastAddressInt);
 
+            OnPropertyChanged(nameof(NetworkInformation));
+
         }
 
     }
@@ -100,14 +103,29 @@ public partial class MainWindowViewModel : ViewModelBase
 
     }
 
+    public string NetworkInformation
+    {
+        get => $"Network Information:\n" +
+               $"\tFirst Address: {FirstAddress}\n" +
+               $"\tLast Address: {LastAddress}\n" +
+               $"\tNetwork Address: {addressRange.NetworkAddress}\n" +
+               $"\tBroadcast Address: {addressRange.BroadcastAddress}\n" +
+               $"\tSubnet Mask: {addressRange.SubnetMask}";
+
+    }
+
     public IPAddress FirstAddress
     {
         get => addressRange.FirstAddress;
         set
         {
             addressRange.FirstAddress = value;
+            addressRange.SubnetMask = null;
+            addressRange.NetworkAddress = null;
+            addressRange.BroadcastAddress = null;
 
             OnPropertyChanged();
+            OnPropertyChanged(nameof(NetworkInformation));
 
         }
 
@@ -119,8 +137,12 @@ public partial class MainWindowViewModel : ViewModelBase
         set
         {
             addressRange.LastAddress = value;
+            addressRange.SubnetMask = null;
+            addressRange.NetworkAddress = null;
+            addressRange.BroadcastAddress = null;
 
             OnPropertyChanged();
+            OnPropertyChanged(nameof(NetworkInformation));
 
         }
 
