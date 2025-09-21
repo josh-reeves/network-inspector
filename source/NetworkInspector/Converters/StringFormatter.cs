@@ -18,9 +18,9 @@ public class StringFormatter : IValueConverter
 #if DEBUG
         Trace.WriteLine("Convert In: " + value);
 #endif
-        string formatString = parameter as string ?? string.Empty;
+        string formatString = System.Convert.ToString(parameter) ?? string.Empty;
 
-        if (targetType.IsAssignableTo(typeof(IEnumerable)))
+        if (value is IEnumerable && targetType.IsAssignableTo(typeof(IEnumerable)))
         {
             IEnumerable values = (value as IEnumerable) ?? throw new ArgumentException();
             Collection<string> strings = new();
@@ -58,11 +58,16 @@ public class StringFormatter : IValueConverter
         Trace.WriteLine("ConvertBack In: " + value);
 #endif
         string valueString = System.Convert.ToString(value) ?? string.Empty,
-               formatString = parameter as string ?? string.Empty;
+               formatString = System.Convert.ToString(parameter) ?? string.Empty;
 
         formatString = Regex.Replace(formatString, insertPattern, string.Empty);
-        valueString = valueString.Replace(string.Concat(formatString.Intersect(formatString)), string.Empty);
 
+        if (formatString != string.Empty)
+            valueString = valueString.Replace(string.Concat(formatString.Intersect(formatString)), string.Empty);
+
+        if (targetType.IsAssignableTo(typeof(ValueType)) && !int.TryParse(valueString, out int integer))
+            valueString = "0";
+        
 #if DEBUG
         Trace.WriteLine("ConvertBack Out: " + valueString);
 #endif
@@ -70,5 +75,4 @@ public class StringFormatter : IValueConverter
 
     }
                 
-
 }

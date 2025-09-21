@@ -83,23 +83,38 @@
 
                     <TextBlock Text="Ports:"/>
 
+                    <TextBox Width="200" 
+                                Text="{Binding Ports,
+                                       Mode=OneWayToSource,
+                                       Converter={StaticResource PortListConverter}, 
+                                       ConverterParameter=', '}}"
+                                ToolTip.Tip="Specify ports to scan as individual ports or ranges separated by commas. For example, '20-22, 80' scans ports 20, 21, 22, and 80."
+                                HorizontalAlignment="Left">
+                        <TextBox.Styles>
+                            <Style Selector="TextBox">
+                                <Setter Property="Text" Value="20 - 22, 80" />
+                            </Style>
+                        </TextBox.Styles>
+                    </TextBox>
+
+                </StackPanel>
+
+                <StackPanel Orientation="Vertical"
+                            Margin="10"
+                            Spacing="10">
+
+                    <TextBlock Text="Timeout:"/>
+
                     <StackPanel Orientation="Horizontal"
                                 Spacing="20">
 
-                        <TextBox Width="200" 
-                                 Text="{Binding Ports,
-                                        Mode=OneWayToSource,
-                                        Converter={StaticResource PortListConverter}, 
-                                        ConverterParameter=', '}}"
-                                 ToolTip.Tip="Specify ports to scan as individual ports or ranges separated by commas. For example, '20-22, 80' scans ports 20, 21, 22, and 80."
-                                 HorizontalAlignment="Left">
-                            <TextBox.Styles>
-                                <Style Selector="TextBox">
-                                    <Setter Property="Text" Value="20 - 22, 80" />
-                                </Style>
-                            </TextBox.Styles>
-                        </TextBox>
-
+                        <TextBox Width="100" 
+                                 Text="{Binding Timeout,
+                                        Converter={StaticResource StringFormatter},
+                                        ConverterParameter='\{0} ms',
+                                        UpdateSourceTrigger=LostFocus}"
+                                 HorizontalAlignment="Left" />
+                                 
                         <Ellipse Width="20"
                                  Height="20"
                                  Fill="LightGray" 

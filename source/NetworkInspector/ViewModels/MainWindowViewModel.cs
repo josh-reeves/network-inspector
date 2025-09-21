@@ -19,14 +19,13 @@ namespace NetworkInspector.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
     #region Fields
-    private const int timeout = 60,
-                      bitsPerByte = 8;
+    private const int bitsPerByte = 8;
+
+    private bool scanIsRunning;
 
     private AddressRange addressRange;
-    private Ping ping;
     private CancellationTokenSource cancellationTokens;
-    private bool scanIsRunning;
-    SemaphoreSlim semaphore;
+    private SemaphoreSlim semaphore;
 
     #endregion
 
@@ -34,10 +33,10 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel()
     {
         addressRange = new([192, 168, 1, 1], [192, 168, 1, 254]);
-        ping = new();
         ScannedHosts = new();
         cancellationTokens = new();
         CIDRMask = CIDRMasks[23];
+        Timeout = 60;
         semaphore = new(1, Environment.ProcessorCount > 1 ? Environment.ProcessorCount / 2 : 1);
 
     }
@@ -85,6 +84,23 @@ public partial class MainWindowViewModel : ViewModelBase
             addressRange.BroadcastAddress = IntToIP(broadcastAddressInt);
 
             OnPropertyChanged(nameof(NetworkInformation));
+
+        }
+
+    }
+
+    public int Timeout
+    {
+        get => addressRange.Timeout;
+
+        set
+        {
+            if (!int.TryParse(value.ToString(), out value))
+                return;
+
+            addressRange.Timeout = value;
+
+            OnPropertyChanged();
 
         }
 
@@ -189,6 +205,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
+            Ping ping = new();
+
             if (firstAddress.AddressFamily != AddressFamily.InterNetwork)
                 return;
 
@@ -199,7 +217,7 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 HostAddress host = new(IntToIP(i));
 
-                host.Status = (await ping.SendPingAsync(host.Address, timeout)).Status;
+                host.Status = (await ping.SendPingAsync(host.Address, Timeout)).Status;
 
                 ScannedHosts.Add(host);
 
@@ -232,7 +250,7 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 try
                 {
-                    await tcpClient.ConnectAsync(host.Address, ports.ElementAt(i)).WaitAsync(TimeSpan.FromMilliseconds(timeout), cancellationToken);
+                    await tcpClient.ConnectAsync(host.Address, ports.ElementAt(i)).WaitAsync(TimeSpan.FromMilliseconds(Timeout), cancellationToken);
 
                     host.OpenPorts.Add(ports.ElementAt(i));
                     host.Status = IPStatus.Success;

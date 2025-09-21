@@ -35,6 +35,7 @@ public class AddressRange
 
     #region Properties
     public int CIDRMask { get; set; }
+    public int Timeout { get; set; }
 
     public IPAddress FirstAddress { get; set; }
     public IPAddress LastAddress { get; set; }
