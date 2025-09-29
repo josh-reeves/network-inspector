@@ -11,24 +11,6 @@ Network inspector is a basic cross-platform network scanner written in C# .NET u
 <br>
 <br>
 
-## Installation
-
-### MacOS
-1. Download the Network Inspector DMG file from the most recent version available for your system in the releases folder (or click here).
-2. Double-click the image to mount it. It should open automatically.
-3. Drag the Network Inspector app into the applications folder.
-<br>
-<br>
-
-### Windows
-1. Download the Network Inspector zip archive from the most recent version available for your system in the releases folder (or click here).
-2. Extract the contents to the archive to wherever youu would like to install the program.
-3. Run the NetworkInspector.exe application to launch the program.
-4. Create a shortcut to the exe as needed.
-<br>
-<br>
-<br>
-
 ## Instructions
 1. When the program is opened, the main window will be displayed.
 <p align="center">
