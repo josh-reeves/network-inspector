@@ -7,8 +7,6 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <RuntimeIdentifiers>osx-x64</RuntimeIdentifiers>
-    <AssemblyName>Network Inspector</AssemblyName>
-    <ApplicationIcon>Assets\icon-network-inspector.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
