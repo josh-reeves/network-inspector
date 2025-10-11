@@ -9,7 +9,7 @@
             "type": "dotnet",
             "launchConfigurationId": "",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/NetworkInspector/NetworkInspector.csproj"
+            "projectPath": "${workspaceFolder}/source/NetworkInspector/NetworkInspector.csproj"
              
         }
 
